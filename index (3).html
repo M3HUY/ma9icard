@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pick a Card</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chewy&family=Nunito:wght@600;800&display=swap" rel="stylesheet">
+<style>
+/* Layout: melon-soda mint table, three strawberry card backs fanned in the middle, one big card flips open on tap. */
+:root {
+  color-scheme: light;
+  --bg: #d9f3ec;
+  --paper: #fffaf5;
+  --ink: #3b1f2b;
+  --muted: #6b4a58;
+  --pink: #ff8fb1;
+  --pink-deep: #ff5f93;
+  --sun: #ffd95a;
+  --mint-deep: #8fdcc8;
+  --shadow: rgba(59, 31, 43, 0.2);
+  --font-display: "Chewy", "Comic Sans MS", "Trebuchet MS", system-ui, sans-serif;
+  --font-body: "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 17px;
+  line-height: 1.5;
+  min-height: 100vh;
+  padding-block: 28px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+main { max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; gap: 26px; text-align: center; }
+h1 { font-family: var(--font-display); font-weight: 400; font-size: clamp(3rem, 15vw, 5rem); line-height: 1; margin: 0; letter-spacing: .01em; }
+p { margin: 0; }
+button { font: inherit; cursor: pointer; }
+:focus-visible { outline: 3px solid var(--pink-deep); outline-offset: 4px; }
+
+.head { display: flex; flex-direction: column; align-items: center; gap: 12px; padding-top: 10px; }
+.stamp {
+  background: var(--sun); color: var(--ink); font-weight: 800; font-size: .8rem; letter-spacing: .12em; text-transform: uppercase;
+  padding: 6px 16px; border-radius: 999px; transform: rotate(-2deg);
+}
+.lede { color: var(--muted); font-size: 1.1rem; }
+
+.table { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 22px; min-height: 360px; justify-content: center; }
+
+/* deck of three backs */
+.deck { display: flex; justify-content: center; align-items: center; gap: 0; }
+.pickcard {
+  width: clamp(92px, 28vw, 150px); aspect-ratio: 3 / 4; border: 0; padding: 0; border-radius: 20px;
+  background: var(--pink); position: relative; overflow: hidden;
+  box-shadow: 0 12px 26px var(--shadow); color: #fff;
+  transition: transform .2s ease;
+  animation: bob 3.6s ease-in-out infinite;
+}
+.pickcard::before {
+  content: ""; position: absolute; inset: 7px; border-radius: 14px; border: 2px dashed rgba(255, 255, 255, 0.85);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.5) 2.5px, transparent 3px) 0 0 / 16px 16px;
+}
+.pickcard svg { position: absolute; left: 50%; top: 50%; width: 38%; transform: translate(-50%, -50%); color: #fff; filter: drop-shadow(0 3px 0 rgba(255, 95, 147, .7)); }
+.pickcard.c1 { transform: rotate(-9deg) translateX(14px); animation-delay: 0s; }
+.pickcard.c2 { transform: translateY(-14px); z-index: 2; animation-delay: -1.2s; }
+.pickcard.c3 { transform: rotate(9deg) translateX(-14px); animation-delay: -2.4s; }
+.pickcard:hover { filter: brightness(1.05); }
+@keyframes bob { 0%, 100% { margin-top: 0; } 50% { margin-top: -8px; } }
+
+/* reveal */
+.reveal { position: relative; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 18px; }
+.flip { perspective: 1100px; width: min(320px, 84vw); aspect-ratio: 4 / 5; }
+.flip-in { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform .75s cubic-bezier(.3, 1.35, .5, 1); }
+.flip-in.flipped { transform: rotateY(180deg); }
+.face { position: absolute; inset: 0; border-radius: 24px; backface-visibility: hidden; -webkit-backface-visibility: hidden; box-shadow: 0 16px 34px var(--shadow); }
+.face.rear { background: var(--pink); overflow: hidden; }
+.face.rear::before { content: ""; position: absolute; inset: 9px; border-radius: 17px; border: 2px dashed rgba(255, 255, 255, 0.85); background: radial-gradient(circle, rgba(255, 255, 255, 0.5) 3px, transparent 3.5px) 0 0 / 18px 18px; }
+.face.front {
+  background: var(--paper); transform: rotateY(180deg);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 26px 24px;
+}
+.tag { background: var(--pink); color: #fff; font-weight: 800; font-size: .75rem; letter-spacing: .14em; text-transform: uppercase; padding: 5px 14px; border-radius: 999px; }
+.tag.secret { background: var(--ink); color: var(--sun); }
+.msg { font-family: var(--font-display); font-size: clamp(1.45rem, 6vw, 1.85rem); line-height: 1.2; text-wrap: balance; }
+.msg.long { font-size: clamp(1.15rem, 4.8vw, 1.4rem); }
+
+.row { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+.btn { border: 0; border-radius: 999px; padding: 12px 22px; font-weight: 800; background: var(--paper); color: var(--ink); box-shadow: 0 6px 0 var(--shadow); transition: transform .12s ease, box-shadow .12s ease; }
+.btn:hover { transform: translateY(-1px); }
+.btn:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--shadow); }
+.btn.hot { background: var(--pink-deep); color: #fff; }
+.toast { min-height: 1.5em; font-weight: 800; color: var(--pink-deep); }
+#copybox { width: min(320px, 84vw); min-height: 84px; resize: none; font: inherit; padding: 10px 12px; border-radius: 14px; border: 2px solid var(--mint-deep); background: var(--paper); color: var(--ink); }
+
+.pop-heart { position: absolute; left: 50%; top: 40%; width: 22px; height: 22px; color: var(--pink-deep); pointer-events: none; animation: rise 1.3s ease-out forwards; }
+@keyframes rise { 0% { transform: translate(-50%, 0) scale(.6); opacity: 1; } 100% { transform: translate(calc(-50% + var(--dx)), -170px) scale(1.2); opacity: 0; } }
+
+/* progress */
+.found { display: flex; flex-direction: column; align-items: center; gap: 10px; color: var(--muted); font-size: .95rem; }
+.dots { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; max-width: 300px; }
+.dot { width: 14px; height: 14px; border-radius: 50%; background: transparent; border: 2px solid var(--mint-deep); }
+.dot.on { background: var(--pink-deep); border-color: var(--pink-deep); }
+footer { color: var(--muted); font-size: .9rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  .pickcard, .pop-heart { animation: none; }
+  .flip-in { transition: none; }
+  .btn { transition: none; }
+}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="heart" viewBox="0 0 32 32"><path fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M16 28C6 20 3 14.5 3 10.5 3 6.9 5.9 4 9.5 4c2.6 0 4.8 1.4 6.5 3.9C17.7 5.4 19.9 4 22.5 4 26.1 4 29 6.9 29 10.5c0 4-3 9.5-13 17.5z"/></symbol>
+</svg>
+
+<main>
+  <header class="head">
+    <span class="stamp">for you, <span data-name>cutie</span></span>
+    <h1>Pick a card</h1>
+    <p class="lede">Three cards. One message each. No wrong answers.</p>
+  </header>
+
+  <section class="table" aria-live="polite">
+    <div class="deck" id="deck">
+      <button class="pickcard c1" type="button" aria-label="Pick the left card"><svg aria-hidden="true"><use href="#heart"/></svg></button>
+      <button class="pickcard c2" type="button" aria-label="Pick the middle card"><svg aria-hidden="true"><use href="#heart"/></svg></button>
+      <button class="pickcard c3" type="button" aria-label="Pick the right card"><svg aria-hidden="true"><use href="#heart"/></svg></button>
+    </div>
+
+    <div class="reveal" id="reveal" hidden>
+      <div class="flip">
+        <div class="flip-in" id="flipIn">
+          <div class="face rear"></div>
+          <div class="face front">
+            <span class="tag" id="tag"></span>
+            <p class="msg" id="msg"></p>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <button class="btn hot" id="again" type="button">Pick another</button>
+        <button class="btn" id="send" type="button">Send it back to me</button>
+      </div>
+      <p class="toast" id="toast" aria-live="polite"></p>
+      <textarea id="copybox" readonly hidden aria-label="Message to copy"></textarea>
+    </div>
+  </section>
+
+  <div class="found">
+    <div class="dots" id="dots" aria-hidden="true"></div>
+    <p id="foundText"></p>
+  </div>
+
+  <footer>Made by <span data-from>someone who likes your vibe</span></footer>
+</main>
+
+<script>
+(function () {
+  // Edit these three lines to personalise the page.
+  var NAME = "cutie";
+  var FROM = "someone who likes your vibe";
+  var SECRET = "banana";
+
+  var $ = function (id) { return document.getElementById(id); };
+  var reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  document.querySelectorAll("[data-name]").forEach(function (e) { e.textContent = NAME; });
+  document.querySelectorAll("[data-from]").forEach(function (e) { e.textContent = FROM; });
+
+  var cards = [
+    { t: "Compliment", x: NAME + ", you have the kind of smile that should come with a warning label." },
+    { t: "Compliment", x: "Not to be dramatic, but you improved my whole week." },
+    { t: "Compliment", x: "You are my favourite notification. Don't tell the others." },
+    { t: "Compliment", x: "You are cute in a way that makes me forget my own jokes." },
+    { t: "Dare", x: "Send me a selfie with your silliest face. I will rate it out of 10. It is already a 10." },
+    { t: "Dare", x: "Smile at your phone right now. Did it work? I think I felt it." },
+    { t: "Dare", x: "Say my name out loud in a dramatic movie voice. No cheating." },
+    { t: "Question", x: "What is one tiny thing that made you smile today?" },
+    { t: "Question", x: "If we had one free evening, where are we going?" },
+    { t: "Question", x: "What is your most dangerous snack?" },
+    { t: "Question", x: "Be honest: do you think of me when your phone buzzes? Asking for a friend. The friend is me." },
+    { t: "Plan", x: "Street food, a long walk, bad jokes. Just saying, it is a good plan." },
+    { t: "Plan", x: "Iced coffee, two straws, zero rush." },
+    { t: "Plan", x: "Next time we talk, you pick the topic and I pick the snack." },
+    { t: "Fun fact", x: "I am 40% funnier when you are around. Science." },
+    { t: "Fun fact", x: "Talking to you makes time disappear. I did the research myself." }
+  ];
+  var secretCard = { t: "Secret card", x: "You found every card. The last one is not on the screen. Text me the word \"" + SECRET + "\" and I will tell you what it says.", secret: true };
+
+  var KEY_F = "pickacard-found", KEY_S = "pickacard-secret";
+  function loadFound() {
+    try {
+      var v = JSON.parse(localStorage.getItem(KEY_F) || "[]");
+      return Array.isArray(v) ? v.filter(function (n) { return typeof n === "number" && n >= 0 && n < cards.length; }) : [];
+    } catch (e) { return []; }
+  }
+  function loadSecret() { try { return localStorage.getItem(KEY_S) === "1"; } catch (e) { return false; } }
+  function save() {
+    try { localStorage.setItem(KEY_F, JSON.stringify(found)); localStorage.setItem(KEY_S, secretSeen ? "1" : "0"); } catch (e) { /* optional */ }
+  }
+  var found = loadFound(), secretSeen = loadSecret(), current = null;
+
+  function renderProgress() {
+    var dots = $("dots"); dots.innerHTML = "";
+    for (var i = 0; i < cards.length; i++) {
+      var d = document.createElement("span");
+      d.className = "dot" + (found.indexOf(i) >= 0 ? " on" : "");
+      dots.appendChild(d);
+    }
+    $("foundText").textContent = found.length === cards.length
+      ? "All " + cards.length + " cards found."
+      : found.length + " of " + cards.length + " cards found";
+  }
+
+  function draw() {
+    var pool = [], all = [], i;
+    for (i = 0; i < cards.length; i++) { all.push(i); if (found.indexOf(i) < 0) pool.push(i); }
+    if (!pool.length && !secretSeen) { secretSeen = true; save(); return secretCard; }
+    var src = pool.length ? pool : all, id = src[Math.floor(Math.random() * src.length)];
+    if (found.indexOf(id) < 0) found.push(id);
+    save();
+    return cards[id];
+  }
+
+  function hearts() {
+    if (reduced) return;
+    var host = $("reveal");
+    for (var i = 0; i < 8; i++) {
+      var h = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      h.setAttribute("class", "pop-heart"); h.setAttribute("aria-hidden", "true");
+      h.style.setProperty("--dx", ((Math.random() - 0.5) * 220).toFixed(0) + "px");
+      h.style.animationDelay = (Math.random() * 0.25).toFixed(2) + "s";
+      var u = document.createElementNS("http://www.w3.org/2000/svg", "use");
+      u.setAttribute("href", "#heart"); h.appendChild(u);
+      host.appendChild(h);
+      (function (el) { setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 1800); })(h);
+    }
+  }
+
+  function pick() {
+    current = draw();
+    $("tag").textContent = current.t;
+    $("tag").className = "tag" + (current.secret ? " secret" : "");
+    $("msg").textContent = current.x;
+    $("msg").className = "msg" + (current.x.length > 105 ? " long" : "");
+    $("toast").textContent = ""; $("copybox").hidden = true;
+    $("deck").hidden = true; $("reveal").hidden = false;
+    var fl = $("flipIn"); fl.classList.remove("flipped"); void fl.offsetWidth;
+    setTimeout(function () { fl.classList.add("flipped"); hearts(); }, 80);
+    renderProgress();
+  }
+
+  document.querySelectorAll(".pickcard").forEach(function (b) { b.addEventListener("click", pick); });
+  $("again").addEventListener("click", function () {
+    $("reveal").hidden = true; $("deck").hidden = false;
+    $("flipIn").classList.remove("flipped");
+  });
+
+  $("send").addEventListener("click", function () {
+    if (!current) return;
+    var text = current.secret
+      ? "I found every card! The word is \"" + SECRET + "\". What does the last card say?"
+      : "I picked a card and it said: \"" + current.x + "\" Your turn. Pick one for me.";
+    var box = $("copybox"), toast = $("toast");
+    box.value = text;
+    function fallback() { box.hidden = false; box.focus(); box.select(); toast.textContent = "Copy this and send it to me."; }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { toast.textContent = "Copied. Now send it to me."; box.hidden = true; }, fallback);
+    } else { fallback(); }
+  });
+
+  renderProgress();
+})();
+</script>
+
+</body>
+</html>
